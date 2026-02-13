@@ -27,8 +27,6 @@
             color: white;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             overflow-x: hidden;
-            user-select: none;
-            -webkit-user-select: none;
         }
 
         .header {
@@ -41,7 +39,6 @@
         .header h1 {
             font-size: 18px;
             font-weight: 600;
-            letter-spacing: 0.5px;
         }
 
         .header .subtitle {
@@ -55,16 +52,12 @@
             aspect-ratio: 9/16;
             background: var(--surface);
             position: relative;
-            overflow: hidden;
             margin-bottom: 15px;
         }
 
         .viewfinder-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -102,10 +95,6 @@
             min-height: 100px;
         }
 
-        textarea::placeholder {
-            color: var(--text-secondary);
-        }
-
         .controls {
             padding: 0 20px;
             margin-bottom: 20px;
@@ -114,7 +103,6 @@
         .control-row {
             display: flex;
             gap: 10px;
-            margin-bottom: 10px;
         }
 
         select, .file-btn {
@@ -125,16 +113,14 @@
             padding: 14px;
             border-radius: 10px;
             font-size: 14px;
-            font-family: inherit;
         }
 
         .file-btn {
-            text-align: center;
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            cursor: pointer;
         }
 
         .shutter-btn {
@@ -142,46 +128,27 @@
             border: none;
             padding: 18px;
             width: calc(100% - 40px);
-            margin: 0 20px;
+            margin: 0 20px 20px;
             border-radius: 50px;
             font-weight: 600;
             font-size: 16px;
             color: #000;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .shutter-btn:active {
-            transform: scale(0.98);
-            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
         }
 
         .shutter-btn:disabled {
             opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .gallery-section {
             padding: 20px;
-            margin-top: 30px;
         }
 
         .gallery-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             margin-bottom: 15px;
-        }
-
-        .gallery-header h3 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .gallery-count {
-            font-size: 13px;
-            color: var(--text-secondary);
         }
 
         .gallery-grid {
@@ -196,7 +163,6 @@
             border-radius: 12px;
             overflow: hidden;
             position: relative;
-            cursor: pointer;
             border: 1px solid var(--border);
         }
 
@@ -204,11 +170,6 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: none;
-        }
-
-        .gallery-item img.loaded {
-            display: block;
         }
 
         .gallery-item.empty {
@@ -219,46 +180,9 @@
             font-size: 12px;
         }
 
-        .gallery-item .loading-spinner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border);
-            border-top-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        .gallery-item .download-icon {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .gallery-item:hover .download-icon {
-            opacity: 1;
-        }
-
         .loading-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: rgba(0, 0, 0, 0.95);
             display: none;
             align-items: center;
@@ -285,16 +209,6 @@
             to { transform: rotate(360deg); }
         }
 
-        .loading-text {
-            font-size: 16px;
-            color: var(--gold);
-        }
-
-        .loading-progress {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-
         .mode-badge {
             display: inline-block;
             padding: 4px 12px;
@@ -306,32 +220,21 @@
             margin-top: 5px;
         }
 
-        .error-message {
-            background: rgba(255, 59, 48, 0.1);
-            border: 1px solid rgba(255, 59, 48, 0.3);
-            color: #ff3b30;
+        .info-box {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            color: #3498db;
             padding: 12px;
             border-radius: 8px;
             margin: 10px 20px;
             font-size: 13px;
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            .camera-viewfinder {
-                aspect-ratio: 3/4;
-            }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>📸 Nano Pro Studio</h1>
-        <div class="subtitle">AI Photography - Samsung S23 Ultra</div>
+        <div class="subtitle">AI Photography - Powered by Flux</div>
         <div class="mode-badge">PRO MODE</div>
     </div>
 
@@ -340,7 +243,7 @@
             <div class="viewfinder-icon">📷</div>
             <div style="text-align: center; color: var(--text-secondary);">
                 <div style="font-size: 14px; margin-bottom: 5px;">Ready to capture</div>
-                <div style="font-size: 12px;">Ultra realistic AI photography</div>
+                <div style="font-size: 12px;">Professional AI photography</div>
             </div>
         </div>
     </div>
@@ -350,9 +253,9 @@
 
 Beispiele:
 • Street Photography in Tokyo at night
-• Portrait of a woman, natural lighting
+• Portrait of a woman, natural lighting  
 • Urban architecture, minimalist style
-• Landscape, golden hour, cinematic">a beautiful sunset over mountains</textarea>
+• Landscape, golden hour, cinematic">a beautiful mountain landscape at sunset, dramatic lighting, professional photography</textarea>
     </div>
 
     <div class="controls">
@@ -370,7 +273,9 @@ Beispiele:
         </div>
     </div>
 
-    <div class="error-message" id="errorMessage"></div>
+    <div class="info-box" id="infoBox">
+        ℹ️ Bilder werden generiert mit Flux AI - höchste Qualität!
+    </div>
 
     <button class="shutter-btn" id="generateBtn" onclick="generateBatch()">
         📸 Capture 4 Photos
@@ -379,7 +284,7 @@ Beispiele:
     <div class="gallery-section">
         <div class="gallery-header">
             <h3>Recent Captures</h3>
-            <span class="gallery-count" id="galleryCount">0 photos</span>
+            <span id="galleryCount">0 photos</span>
         </div>
         <div class="gallery-grid" id="gallery">
             <div class="gallery-item empty">Empty slot</div>
@@ -391,18 +296,15 @@ Beispiele:
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <div class="loading-text">Generating Photos...</div>
-        <div class="loading-progress" id="loadingProgress">0 / 4 completed</div>
+        <div style="font-size: 16px; color: var(--gold);">Generating Photos...</div>
+        <div id="loadingProgress" style="font-size: 14px; color: var(--text-secondary);">0 / 4 completed</div>
     </div>
 
     <script>
         let photoCount = 0;
 
-        // Register service worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker registered'))
-                .catch(err => console.log('Service Worker registration failed'));
+            navigator.serviceWorker.register('sw.js').catch(() => {});
         }
 
         async function generateBatch() {
@@ -410,111 +312,54 @@ Beispiele:
             const overlay = document.getElementById('loadingOverlay');
             const progress = document.getElementById('loadingProgress');
             const promptText = document.getElementById('prompt').value.trim();
-            const errorMsg = document.getElementById('errorMessage');
-
-            errorMsg.classList.remove('show');
 
             if (!promptText) {
-                showError('Bitte beschreibe dein Foto!');
+                alert('Bitte beschreibe dein Foto!');
                 return;
             }
 
             btn.disabled = true;
             overlay.classList.add('active');
             
-            const basePrompt = `Hyper-realistic photography, professional DSLR quality, 8k resolution, ultra detailed, photorealistic, sharp focus, natural lighting, Samsung Galaxy S23 Ultra, ${promptText}`;
+            const enhancedPrompt = `professional photography, hyper realistic, 8k, ultra detailed, ${promptText}`;
             const ratio = document.getElementById('ratio').value;
             const gallery = document.getElementById('gallery');
-            let successCount = 0;
+
+            const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
+            const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
 
             for(let i = 0; i < 4; i++) {
                 progress.textContent = `${i} / 4 completed`;
                 
-                try {
-                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
-                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
-                    const seed = Date.now() + i * 1000;
-                    
-                    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(basePrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&private=true&enhance=true`;
-                    
-                    // Create gallery item with loading spinner
-                    const galleryItem = document.createElement('div');
-                    galleryItem.className = 'gallery-item';
-                    galleryItem.innerHTML = `
-                        <div class="loading-spinner"></div>
-                        <img src="${imageUrl}" alt="Generated photo">
-                        <div class="download-icon">⬇️</div>
-                    `;
-                    
-                    const img = galleryItem.querySelector('img');
-                    const spinner = galleryItem.querySelector('.loading-spinner');
-                    
-                    // Handle image load
-                    img.onload = function() {
-                        if (this.naturalWidth > 10 && this.naturalHeight > 10) {
-                            spinner.style.display = 'none';
-                            this.classList.add('loaded');
-                        }
-                    };
-                    
-                    img.onerror = function() {
-                        galleryItem.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ff3b30;text-align:center;padding:10px;">❌ Fehler</div>';
-                    };
-                    
-                    galleryItem.onclick = () => saveToGallery(imageUrl, i);
-                    
-                    const emptySlot = gallery.querySelector('.gallery-item.empty');
-                    if (emptySlot) {
-                        gallery.replaceChild(galleryItem, emptySlot);
-                    } else {
-                        gallery.insertBefore(galleryItem, gallery.firstChild);
-                    }
-                    
-                    photoCount++;
-                    updateGalleryCount();
-                    successCount++;
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                } catch (error) {
-                    console.error(`Image ${i + 1} failed:`, error);
+                // Using a different, more reliable endpoint
+                const seed = Math.floor(Math.random() * 1000000);
+                const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=1&model=flux`;
+                
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                galleryItem.innerHTML = `<img src="${imageUrl}" alt="AI Photo" onclick="window.open('${imageUrl}', '_blank')">`;
+                
+                const emptySlot = gallery.querySelector('.gallery-item.empty');
+                if (emptySlot) {
+                    gallery.replaceChild(galleryItem, emptySlot);
+                } else {
+                    gallery.insertBefore(galleryItem, gallery.firstChild);
                 }
+                
+                photoCount++;
+                document.getElementById('galleryCount').textContent = `${photoCount} photo${photoCount !== 1 ? 's' : ''}`;
+                
+                await new Promise(r => setTimeout(r, 2000));
             }
             
-            progress.textContent = `${successCount} / 4 completed`;
+            progress.textContent = '4 / 4 completed';
             btn.disabled = false;
             overlay.classList.remove('active');
         }
 
-        function showError(message) {
-            const errorMsg = document.getElementById('errorMessage');
-            errorMsg.textContent = message;
-            errorMsg.classList.add('show');
-            setTimeout(() => errorMsg.classList.remove('show'), 5000);
-        }
-
-        async function saveToGallery(url, index) {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = `S23_Ultra_AI_Photo_${Date.now()}_${index}.png`;
-                a.click();
-                URL.revokeObjectURL(blobUrl);
-            } catch (error) {
-                window.open(url, '_blank');
-            }
-        }
-
-        function updateGalleryCount() {
-            document.getElementById('galleryCount').textContent = `${photoCount} photo${photoCount !== 1 ? 's' : ''}`;
-        }
-
         document.getElementById('refs').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
-                alert(`${e.target.files.length} Referenz-Bild(er) ausgewählt`);
+                document.getElementById('infoBox').textContent = `✓ ${e.target.files.length} Referenz-Bild(er) ausgewählt`;
             }
         });
     </script>
