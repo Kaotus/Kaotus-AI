@@ -117,7 +117,7 @@
             margin-bottom: 10px;
         }
 
-        select {
+        select, .file-btn {
             flex: 1;
             background: var(--surface);
             color: white;
@@ -126,6 +126,15 @@
             border-radius: 10px;
             font-size: 14px;
             font-family: inherit;
+        }
+
+        .file-btn {
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .api-selector {
@@ -384,6 +393,11 @@ Beispiele:
                 <option value="16:9">🖼️ Landscape (16:9)</option>
                 <option value="1:1">⬛ Square (1:1)</option>
             </select>
+            <label for="refs" class="file-btn">
+                <span>📎</span>
+                <span>Referenz</span>
+            </label>
+            <input type="file" id="refs" multiple accept="image/*" style="display:none">
         </div>
     </div>
 
@@ -616,6 +630,13 @@ Beispiele:
         function updateGalleryCount() {
             document.getElementById('galleryCount').textContent = `${photoCount} photo${photoCount !== 1 ? 's' : ''}`;
         }
+
+        // Handle file input display
+        document.getElementById('refs').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                alert(`${e.target.files.length} Referenz-Bild(er) ausgewählt`);
+            }
+        });
     </script>
 </body>
 </html>
