@@ -137,46 +137,6 @@
             gap: 8px;
         }
 
-        .api-selector {
-            background: var(--surface);
-            padding: 15px 20px;
-            margin: 0 20px 20px 20px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-        }
-
-        .api-selector label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .api-options {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .api-option {
-            flex: 1;
-            min-width: 80px;
-            padding: 10px;
-            background: #222;
-            border: 2px solid #333;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.3s;
-        }
-
-        .api-option.active {
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.1);
-            color: var(--gold);
-        }
-
         .shutter-btn {
             background: linear-gradient(135deg, var(--gold) 0%, #f4d03f 100%);
             border: none;
@@ -244,6 +204,11 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: none;
+        }
+
+        .gallery-item img.loaded {
+            display: block;
         }
 
         .gallery-item.empty {
@@ -252,6 +217,19 @@
             justify-content: center;
             color: var(--text-secondary);
             font-size: 12px;
+        }
+
+        .gallery-item .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
         .gallery-item .download-icon {
@@ -353,8 +331,8 @@
 <body>
     <div class="header">
         <h1>📸 Nano Pro Studio</h1>
-        <div class="subtitle">AI Photography - Unlimited Generation</div>
-        <div class="mode-badge">UNLIMITED MODE</div>
+        <div class="subtitle">AI Photography - Samsung S23 Ultra</div>
+        <div class="mode-badge">PRO MODE</div>
     </div>
 
     <div class="camera-viewfinder">
@@ -374,16 +352,7 @@ Beispiele:
 • Street Photography in Tokyo at night
 • Portrait of a woman, natural lighting
 • Urban architecture, minimalist style
-• Landscape, golden hour, cinematic"></textarea>
-    </div>
-
-    <div class="api-selector">
-        <label>🚀 AI Engine (Auto-Switch bei Limit):</label>
-        <div class="api-options">
-            <div class="api-option active" data-api="pollinations">Pollinations</div>
-            <div class="api-option" data-api="huggingface">HuggingFace</div>
-            <div class="api-option" data-api="artbot">ArtBot</div>
-        </div>
+• Landscape, golden hour, cinematic">a beautiful sunset over mountains</textarea>
     </div>
 
     <div class="controls">
@@ -404,7 +373,7 @@ Beispiele:
     <div class="error-message" id="errorMessage"></div>
 
     <button class="shutter-btn" id="generateBtn" onclick="generateBatch()">
-        📸 Generate 4 Photos (Unlimited)
+        📸 Capture 4 Photos
     </button>
 
     <div class="gallery-section">
@@ -428,7 +397,6 @@ Beispiele:
 
     <script>
         let photoCount = 0;
-        let currentAPI = 'pollinations';
 
         // Register service worker
         if ('serviceWorker' in navigator) {
@@ -436,69 +404,6 @@ Beispiele:
                 .then(reg => console.log('Service Worker registered'))
                 .catch(err => console.log('Service Worker registration failed'));
         }
-
-        // API selector
-        document.querySelectorAll('.api-option').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.api-option').forEach(o => o.classList.remove('active'));
-                option.classList.add('active');
-                currentAPI = option.dataset.api;
-            });
-        });
-
-        // Multiple free AI APIs
-        const APIs = {
-            pollinations: {
-                name: 'Pollinations.AI',
-                generate: async (prompt, ratio) => {
-                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
-                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
-                    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&nologo=true&enhance=true`;
-                    return url;
-                }
-            },
-            huggingface: {
-                name: 'Hugging Face',
-                generate: async (prompt, ratio) => {
-                    // Using Stable Diffusion via Hugging Face Inference API (free tier)
-                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
-                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
-                    
-                    try {
-                        const response = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                inputs: prompt,
-                                parameters: {
-                                    width: width,
-                                    height: height,
-                                }
-                            })
-                        });
-                        
-                        const blob = await response.blob();
-                        return URL.createObjectURL(blob);
-                    } catch (error) {
-                        throw new Error('HuggingFace API error');
-                    }
-                }
-            },
-            artbot: {
-                name: 'ArtBot',
-                generate: async (prompt, ratio) => {
-                    // Using Craiyon (formerly DALL-E mini) - completely free
-                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
-                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
-                    
-                    // Fallback to another Pollinations endpoint with different model
-                    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&model=flux&nologo=true&enhance=true&seed=${Math.random()}`;
-                    return url;
-                }
-            }
-        };
 
         async function generateBatch() {
             const btn = document.getElementById('generateBtn');
@@ -517,80 +422,66 @@ Beispiele:
             btn.disabled = true;
             overlay.classList.add('active');
             
-            // Enhanced prompt for ultra-realism
-            const basePrompt = `Hyper-realistic photography, professional quality, 8k resolution, ultra detailed, photorealistic, sharp focus, natural lighting, ${promptText}`;
-
+            const basePrompt = `Hyper-realistic photography, professional DSLR quality, 8k resolution, ultra detailed, photorealistic, sharp focus, natural lighting, Samsung Galaxy S23 Ultra, ${promptText}`;
             const ratio = document.getElementById('ratio').value;
             const gallery = document.getElementById('gallery');
             let successCount = 0;
-            let apiIndex = 0;
-            const apiKeys = Object.keys(APIs);
 
             for(let i = 0; i < 4; i++) {
                 progress.textContent = `${i} / 4 completed`;
                 
-                let imageGenerated = false;
-                let attempts = 0;
-                
-                // Try different APIs if one fails
-                while (!imageGenerated && attempts < apiKeys.length) {
-                    const apiName = apiKeys[apiIndex % apiKeys.length];
+                try {
+                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
+                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
+                    const seed = Date.now() + i * 1000;
                     
-                    try {
-                        console.log(`Trying ${APIs[apiName].name}...`);
-                        const imageUrl = await APIs[apiName].generate(basePrompt, ratio);
-                        
-                        // Create gallery item
-                        const galleryItem = document.createElement('div');
-                        galleryItem.className = 'gallery-item';
-                        galleryItem.innerHTML = `
-                            <img src="${imageUrl}" alt="Generated photo" crossorigin="anonymous">
-                            <div class="download-icon">⬇️</div>
-                        `;
-                        galleryItem.onclick = () => saveToGallery(imageUrl, i);
-                        
-                        // Replace empty slots or prepend
-                        const emptySlot = gallery.querySelector('.gallery-item.empty');
-                        if (emptySlot) {
-                            gallery.replaceChild(galleryItem, emptySlot);
-                        } else {
-                            gallery.insertBefore(galleryItem, gallery.firstChild);
+                    const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(basePrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&private=true&enhance=true`;
+                    
+                    // Create gallery item with loading spinner
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+                    galleryItem.innerHTML = `
+                        <div class="loading-spinner"></div>
+                        <img src="${imageUrl}" alt="Generated photo">
+                        <div class="download-icon">⬇️</div>
+                    `;
+                    
+                    const img = galleryItem.querySelector('img');
+                    const spinner = galleryItem.querySelector('.loading-spinner');
+                    
+                    // Handle image load
+                    img.onload = function() {
+                        if (this.naturalWidth > 10 && this.naturalHeight > 10) {
+                            spinner.style.display = 'none';
+                            this.classList.add('loaded');
                         }
-                        
-                        photoCount++;
-                        updateGalleryCount();
-                        imageGenerated = true;
-                        successCount++;
-                        
-                    } catch (error) {
-                        console.error(`${APIs[apiName].name} failed:`, error);
-                        apiIndex++;
-                        attempts++;
-                        
-                        // Update UI to show which API we're trying
-                        document.querySelectorAll('.api-option').forEach(opt => {
-                            opt.classList.remove('active');
-                            if (opt.dataset.api === apiKeys[apiIndex % apiKeys.length]) {
-                                opt.classList.add('active');
-                            }
-                        });
+                    };
+                    
+                    img.onerror = function() {
+                        galleryItem.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#ff3b30;text-align:center;padding:10px;">❌ Fehler</div>';
+                    };
+                    
+                    galleryItem.onclick = () => saveToGallery(imageUrl, i);
+                    
+                    const emptySlot = gallery.querySelector('.gallery-item.empty');
+                    if (emptySlot) {
+                        gallery.replaceChild(galleryItem, emptySlot);
+                    } else {
+                        gallery.insertBefore(galleryItem, gallery.firstChild);
                     }
+                    
+                    photoCount++;
+                    updateGalleryCount();
+                    successCount++;
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                } catch (error) {
+                    console.error(`Image ${i + 1} failed:`, error);
                 }
-                
-                if (!imageGenerated) {
-                    showError(`Bild ${i + 1} konnte nicht generiert werden. Versuche es erneut.`);
-                }
-                
-                // Small delay between generations
-                await new Promise(resolve => setTimeout(resolve, 500));
             }
             
             progress.textContent = `${successCount} / 4 completed`;
-            
-            if (successCount === 0) {
-                showError('Alle APIs haben das Limit erreicht. Bitte versuche es in ein paar Minuten erneut.');
-            }
-            
             btn.disabled = false;
             overlay.classList.remove('active');
         }
@@ -604,25 +495,15 @@ Beispiele:
 
         async function saveToGallery(url, index) {
             try {
-                // For data URLs, download directly
-                if (url.startsWith('data:') || url.startsWith('blob:')) {
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Nano_Pro_${Date.now()}_${index}.png`;
-                    a.click();
-                } else {
-                    // For external URLs, fetch and download
-                    const response = await fetch(url);
-                    const blob = await response.blob();
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = `Nano_Pro_${Date.now()}_${index}.png`;
-                    a.click();
-                    URL.revokeObjectURL(blobUrl);
-                }
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `S23_Ultra_AI_Photo_${Date.now()}_${index}.png`;
+                a.click();
+                URL.revokeObjectURL(blobUrl);
             } catch (error) {
-                // Fallback: open in new tab
                 window.open(url, '_blank');
             }
         }
@@ -631,7 +512,6 @@ Beispiele:
             document.getElementById('galleryCount').textContent = `${photoCount} photo${photoCount !== 1 ? 's' : ''}`;
         }
 
-        // Handle file input display
         document.getElementById('refs').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                 alert(`${e.target.files.length} Referenz-Bild(er) ausgewählt`);
