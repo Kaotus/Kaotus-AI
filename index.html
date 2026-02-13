@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Nano Pro Studio</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-192.png">
+    <script src="https://js.puter.com/v2/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #d4af37;
+            --bg: #000000;
+            --surface: #1a1a1a;
+            --border: #333;
+            --text-secondary: #999;
+        }
+
+        body {
+            background: var(--bg);
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .header {
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+            padding: 15px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .header .subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .camera-viewfinder {
+            width: 100%;
+            aspect-ratio: 9/16;
+            background: var(--surface);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .viewfinder-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .viewfinder-icon {
+            width: 80px;
+            height: 80px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .prompt-container {
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            background: var(--surface);
+            color: white;
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            min-height: 100px;
+        }
+
+        textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .controls {
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        select, .file-btn {
+            flex: 1;
+            background: var(--surface);
+            color: white;
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .file-btn {
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .shutter-btn {
+            background: linear-gradient(135deg, var(--gold) 0%, #f4d03f 100%);
+            border: none;
+            padding: 18px;
+            width: calc(100% - 40px);
+            margin: 0 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .shutter-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+        }
+
+        .shutter-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .gallery-section {
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .gallery-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .gallery-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .gallery-item {
+            aspect-ratio: 9/16;
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .gallery-item .download-icon {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gallery-item:hover .download-icon {
+            opacity: 1;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            color: var(--gold);
+        }
+
+        .loading-progress {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .camera-viewfinder {
+                aspect-ratio: 3/4;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📸 Nano Pro Studio</h1>
+        <div class="subtitle">AI Photography - Samsung S23 Ultra</div>
+        <div class="mode-badge">PRO MODE</div>
+    </div>
+
+    <div class="camera-viewfinder">
+        <div class="viewfinder-overlay">
+            <div class="viewfinder-icon">📷</div>
+            <div style="text-align: center; color: var(--text-secondary);">
+                <div style="font-size: 14px; margin-bottom: 5px;">Ready to capture</div>
+                <div style="font-size: 12px;">Ultra realistic AI photography</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="prompt-container">
+        <textarea id="prompt" placeholder="Beschreibe dein Foto...
+
+Beispiele:
+• Street Photography in Tokyo at night
+• Portrait of a woman, natural lighting
+• Urban architecture, minimalist style
+• Landscape, golden hour, cinematic"></textarea>
+    </div>
+
+    <div class="controls">
+        <div class="control-row">
+            <select id="ratio">
+                <option value="9:16">📱 Portrait (9:16)</option>
+                <option value="16:9">🖼️ Landscape (16:9)</option>
+                <option value="1:1">⬛ Square (1:1)</option>
+            </select>
+            <label for="refs" class="file-btn">
+                <span>📎</span>
+                <span>Referenz</span>
+            </label>
+            <input type="file" id="refs" multiple accept="image/*" style="display:none">
+        </div>
+    </div>
+
+    <button class="shutter-btn" id="generateBtn" onclick="generateBatch()">
+        📸 Capture 4 Photos
+    </button>
+
+    <div class="gallery-section">
+        <div class="gallery-header">
+            <h3>Recent Captures</h3>
+            <span class="gallery-count" id="galleryCount">0 photos</span>
+        </div>
+        <div class="gallery-grid" id="gallery">
+            <div class="gallery-item empty">Empty slot</div>
+            <div class="gallery-item empty">Empty slot</div>
+            <div class="gallery-item empty">Empty slot</div>
+            <div class="gallery-item empty">Empty slot</div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Generating Photos...</div>
+        <div class="loading-progress" id="loadingProgress">0 / 4 completed</div>
+    </div>
+
+    <script>
+        let photoCount = 0;
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+
+        async function generateBatch() {
+            const btn = document.getElementById('generateBtn');
+            const overlay = document.getElementById('loadingOverlay');
+            const progress = document.getElementById('loadingProgress');
+            const promptText = document.getElementById('prompt').value.trim();
+
+            if (!promptText) {
+                alert('Bitte beschreibe dein Foto!');
+                return;
+            }
+
+            btn.disabled = true;
+            overlay.classList.add('active');
+            
+            // Enhanced prompt for ultra-realism
+            const basePrompt = `Hyper-realistic photography, professional DSLR quality, 8k resolution, shot on Samsung Galaxy S23 Ultra, natural lighting, no AI artifacts, highly detailed, photorealistic, sharp focus, ${promptText}`;
+
+            try {
+                const gallery = document.getElementById('gallery');
+                
+                for(let i = 0; i < 4; i++) {
+                    progress.textContent = `${i} / 4 completed`;
+                    
+                    const img = await puter.ai.txt2img(basePrompt, {
+                        model: 'nanobanana-pro',
+                        aspect_ratio: document.getElementById('ratio').value
+                    });
+                    
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item';
+                    galleryItem.innerHTML = `
+                        <img src="${img.src}" alt="Generated photo">
+                        <div class="download-icon">⬇️</div>
+                    `;
+                    galleryItem.onclick = () => saveToGallery(img.src, i);
+                    
+                    // Replace empty slots or prepend
+                    const emptySlot = gallery.querySelector('.gallery-item.empty');
+                    if (emptySlot) {
+                        gallery.replaceChild(galleryItem, emptySlot);
+                    } else {
+                        gallery.insertBefore(galleryItem, gallery.firstChild);
+                    }
+                    
+                    photoCount++;
+                    updateGalleryCount();
+                }
+                
+                progress.textContent = '4 / 4 completed';
+            } catch (e) {
+                console.error(e);
+                alert("Limit erreicht oder Fehler! Bitte versuche es später erneut.");
+            }
+            
+            btn.disabled = false;
+            overlay.classList.remove('active');
+        }
+
+        function saveToGallery(url, index) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `S23_Ultra_AI_Photo_${Date.now()}_${index}.png`;
+            a.click();
+        }
+
+        function updateGalleryCount() {
+            document.getElementById('galleryCount').textContent = `${photoCount} photo${photoCount !== 1 ? 's' : ''}`;
+        }
+
+        // Handle file input display
+        document.getElementById('refs').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                alert(`${e.target.files.length} Referenz-Bild(er) ausgewählt`);
+            }
+        });
+    </script>
+</body>
+</html>
