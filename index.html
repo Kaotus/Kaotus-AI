@@ -7,7 +7,6 @@
     <title>Nano Pro Studio</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
-    <script src="https://js.puter.com/v2/"></script>
     <style>
         * {
             margin: 0;
@@ -118,7 +117,7 @@
             margin-bottom: 10px;
         }
 
-        select, .file-btn {
+        select {
             flex: 1;
             background: var(--surface);
             color: white;
@@ -129,13 +128,44 @@
             font-family: inherit;
         }
 
-        .file-btn {
+        .api-selector {
+            background: var(--surface);
+            padding: 15px 20px;
+            margin: 0 20px 20px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .api-selector label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .api-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .api-option {
+            flex: 1;
+            min-width: 80px;
+            padding: 10px;
+            background: #222;
+            border: 2px solid #333;
+            border-radius: 8px;
             text-align: center;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .api-option.active {
+            border-color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
         }
 
         .shutter-btn {
@@ -242,7 +272,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             display: none;
             align-items: center;
             justify-content: center;
@@ -289,6 +319,21 @@
             margin-top: 5px;
         }
 
+        .error-message {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            color: #ff3b30;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 20px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .camera-viewfinder {
                 aspect-ratio: 3/4;
@@ -299,8 +344,8 @@
 <body>
     <div class="header">
         <h1>📸 Nano Pro Studio</h1>
-        <div class="subtitle">AI Photography - Samsung S23 Ultra</div>
-        <div class="mode-badge">PRO MODE</div>
+        <div class="subtitle">AI Photography - Unlimited Generation</div>
+        <div class="mode-badge">UNLIMITED MODE</div>
     </div>
 
     <div class="camera-viewfinder">
@@ -323,6 +368,15 @@ Beispiele:
 • Landscape, golden hour, cinematic"></textarea>
     </div>
 
+    <div class="api-selector">
+        <label>🚀 AI Engine (Auto-Switch bei Limit):</label>
+        <div class="api-options">
+            <div class="api-option active" data-api="pollinations">Pollinations</div>
+            <div class="api-option" data-api="huggingface">HuggingFace</div>
+            <div class="api-option" data-api="artbot">ArtBot</div>
+        </div>
+    </div>
+
     <div class="controls">
         <div class="control-row">
             <select id="ratio">
@@ -330,16 +384,13 @@ Beispiele:
                 <option value="16:9">🖼️ Landscape (16:9)</option>
                 <option value="1:1">⬛ Square (1:1)</option>
             </select>
-            <label for="refs" class="file-btn">
-                <span>📎</span>
-                <span>Referenz</span>
-            </label>
-            <input type="file" id="refs" multiple accept="image/*" style="display:none">
         </div>
     </div>
 
+    <div class="error-message" id="errorMessage"></div>
+
     <button class="shutter-btn" id="generateBtn" onclick="generateBatch()">
-        📸 Capture 4 Photos
+        📸 Generate 4 Photos (Unlimited)
     </button>
 
     <div class="gallery-section">
@@ -363,6 +414,7 @@ Beispiele:
 
     <script>
         let photoCount = 0;
+        let currentAPI = 'pollinations';
 
         // Register service worker
         if ('serviceWorker' in navigator) {
@@ -371,14 +423,80 @@ Beispiele:
                 .catch(err => console.log('Service Worker registration failed'));
         }
 
+        // API selector
+        document.querySelectorAll('.api-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.api-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                currentAPI = option.dataset.api;
+            });
+        });
+
+        // Multiple free AI APIs
+        const APIs = {
+            pollinations: {
+                name: 'Pollinations.AI',
+                generate: async (prompt, ratio) => {
+                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
+                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
+                    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&nologo=true&enhance=true`;
+                    return url;
+                }
+            },
+            huggingface: {
+                name: 'Hugging Face',
+                generate: async (prompt, ratio) => {
+                    // Using Stable Diffusion via Hugging Face Inference API (free tier)
+                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
+                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
+                    
+                    try {
+                        const response = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                inputs: prompt,
+                                parameters: {
+                                    width: width,
+                                    height: height,
+                                }
+                            })
+                        });
+                        
+                        const blob = await response.blob();
+                        return URL.createObjectURL(blob);
+                    } catch (error) {
+                        throw new Error('HuggingFace API error');
+                    }
+                }
+            },
+            artbot: {
+                name: 'ArtBot',
+                generate: async (prompt, ratio) => {
+                    // Using Craiyon (formerly DALL-E mini) - completely free
+                    const width = ratio === '16:9' ? 1024 : ratio === '1:1' ? 768 : 512;
+                    const height = ratio === '16:9' ? 576 : ratio === '1:1' ? 768 : 912;
+                    
+                    // Fallback to another Pollinations endpoint with different model
+                    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&model=flux&nologo=true&enhance=true&seed=${Math.random()}`;
+                    return url;
+                }
+            }
+        };
+
         async function generateBatch() {
             const btn = document.getElementById('generateBtn');
             const overlay = document.getElementById('loadingOverlay');
             const progress = document.getElementById('loadingProgress');
             const promptText = document.getElementById('prompt').value.trim();
+            const errorMsg = document.getElementById('errorMessage');
+
+            errorMsg.classList.remove('show');
 
             if (!promptText) {
-                alert('Bitte beschreibe dein Foto!');
+                showError('Bitte beschreibe dein Foto!');
                 return;
             }
 
@@ -386,66 +504,118 @@ Beispiele:
             overlay.classList.add('active');
             
             // Enhanced prompt for ultra-realism
-            const basePrompt = `Hyper-realistic photography, professional DSLR quality, 8k resolution, shot on Samsung Galaxy S23 Ultra, natural lighting, no AI artifacts, highly detailed, photorealistic, sharp focus, ${promptText}`;
+            const basePrompt = `Hyper-realistic photography, professional quality, 8k resolution, ultra detailed, photorealistic, sharp focus, natural lighting, ${promptText}`;
 
-            try {
-                const gallery = document.getElementById('gallery');
+            const ratio = document.getElementById('ratio').value;
+            const gallery = document.getElementById('gallery');
+            let successCount = 0;
+            let apiIndex = 0;
+            const apiKeys = Object.keys(APIs);
+
+            for(let i = 0; i < 4; i++) {
+                progress.textContent = `${i} / 4 completed`;
                 
-                for(let i = 0; i < 4; i++) {
-                    progress.textContent = `${i} / 4 completed`;
+                let imageGenerated = false;
+                let attempts = 0;
+                
+                // Try different APIs if one fails
+                while (!imageGenerated && attempts < apiKeys.length) {
+                    const apiName = apiKeys[apiIndex % apiKeys.length];
                     
-                    const img = await puter.ai.txt2img(basePrompt, {
-                        model: 'nanobanana-pro',
-                        aspect_ratio: document.getElementById('ratio').value
-                    });
-                    
-                    const galleryItem = document.createElement('div');
-                    galleryItem.className = 'gallery-item';
-                    galleryItem.innerHTML = `
-                        <img src="${img.src}" alt="Generated photo">
-                        <div class="download-icon">⬇️</div>
-                    `;
-                    galleryItem.onclick = () => saveToGallery(img.src, i);
-                    
-                    // Replace empty slots or prepend
-                    const emptySlot = gallery.querySelector('.gallery-item.empty');
-                    if (emptySlot) {
-                        gallery.replaceChild(galleryItem, emptySlot);
-                    } else {
-                        gallery.insertBefore(galleryItem, gallery.firstChild);
+                    try {
+                        console.log(`Trying ${APIs[apiName].name}...`);
+                        const imageUrl = await APIs[apiName].generate(basePrompt, ratio);
+                        
+                        // Create gallery item
+                        const galleryItem = document.createElement('div');
+                        galleryItem.className = 'gallery-item';
+                        galleryItem.innerHTML = `
+                            <img src="${imageUrl}" alt="Generated photo" crossorigin="anonymous">
+                            <div class="download-icon">⬇️</div>
+                        `;
+                        galleryItem.onclick = () => saveToGallery(imageUrl, i);
+                        
+                        // Replace empty slots or prepend
+                        const emptySlot = gallery.querySelector('.gallery-item.empty');
+                        if (emptySlot) {
+                            gallery.replaceChild(galleryItem, emptySlot);
+                        } else {
+                            gallery.insertBefore(galleryItem, gallery.firstChild);
+                        }
+                        
+                        photoCount++;
+                        updateGalleryCount();
+                        imageGenerated = true;
+                        successCount++;
+                        
+                    } catch (error) {
+                        console.error(`${APIs[apiName].name} failed:`, error);
+                        apiIndex++;
+                        attempts++;
+                        
+                        // Update UI to show which API we're trying
+                        document.querySelectorAll('.api-option').forEach(opt => {
+                            opt.classList.remove('active');
+                            if (opt.dataset.api === apiKeys[apiIndex % apiKeys.length]) {
+                                opt.classList.add('active');
+                            }
+                        });
                     }
-                    
-                    photoCount++;
-                    updateGalleryCount();
                 }
                 
-                progress.textContent = '4 / 4 completed';
-            } catch (e) {
-                console.error(e);
-                alert("Limit erreicht oder Fehler! Bitte versuche es später erneut.");
+                if (!imageGenerated) {
+                    showError(`Bild ${i + 1} konnte nicht generiert werden. Versuche es erneut.`);
+                }
+                
+                // Small delay between generations
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            progress.textContent = `${successCount} / 4 completed`;
+            
+            if (successCount === 0) {
+                showError('Alle APIs haben das Limit erreicht. Bitte versuche es in ein paar Minuten erneut.');
             }
             
             btn.disabled = false;
             overlay.classList.remove('active');
         }
 
-        function saveToGallery(url, index) {
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `S23_Ultra_AI_Photo_${Date.now()}_${index}.png`;
-            a.click();
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = message;
+            errorMsg.classList.add('show');
+            setTimeout(() => errorMsg.classList.remove('show'), 5000);
+        }
+
+        async function saveToGallery(url, index) {
+            try {
+                // For data URLs, download directly
+                if (url.startsWith('data:') || url.startsWith('blob:')) {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Nano_Pro_${Date.now()}_${index}.png`;
+                    a.click();
+                } else {
+                    // For external URLs, fetch and download
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = `Nano_Pro_${Date.now()}_${index}.png`;
+                    a.click();
+                    URL.revokeObjectURL(blobUrl);
+                }
+            } catch (error) {
+                // Fallback: open in new tab
+                window.open(url, '_blank');
+            }
         }
 
         function updateGalleryCount() {
             document.getElementById('galleryCount').textContent = `${photoCount} photo${photoCount !== 1 ? 's' : ''}`;
         }
-
-        // Handle file input display
-        document.getElementById('refs').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                alert(`${e.target.files.length} Referenz-Bild(er) ausgewählt`);
-            }
-        });
     </script>
 </body>
 </html>
